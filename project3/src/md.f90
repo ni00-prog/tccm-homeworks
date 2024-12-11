@@ -36,8 +36,6 @@ do i=1,Natoms
    write(*,130) (dist(i,j), j=1,Natoms)
 enddo
 
-130 format(3(2x,f12.6))
-
 ! Obtain Natoms 
 integer function read_Natoms(input_file) result(Natoms)
 character(len=20),intent(in) :: input_file
@@ -82,43 +80,46 @@ end subroutine compute_distances
 
 ! Calculate potential 
 
-write(*,110) 'Potential Energy: ',V(epsilon,sigma,dist,Natoms)
+Vtot= V(epsilon,sigma,dist,Natoms)
+write(*,110) 'Potential Energy: ',Vtot
 
 ! Calculate kinetic energy
 
 allocate(vel(Natoms,3))
 vel=0.d0
-write(*,110) 'Kinetic Energy: ', k(Natoms,vel,mass)
+Ktot= K(Natoms,vel,mass)
+write(*,110) 'Kinetic Energy: ', Ktot
 
 ! Calculate total energy
 
-Ktot=K(Natoms,vel,mass)					!you can't pass function as argument
-Vtot=V(epsilon,sigma,dist,Natoms)			!so I just assigned the value into a variable
-write(*,110) 'Total Energy: ', E(Ktot,Vtot)
+Etot= Ktot + Vtot				!direct calculation instead of function call
+write(*,110) 'Total Energy: ', Etot
 
 ! Calculate acceleration
 
 allocate(acc(Natoms,3))
 call compute_acc(Natoms,coord,mass,dist,acc)
 write(*,*) 'Acceleration: '
-   
-   do i=1,Natoms
-      write(*,130) (acc(i,j), j=1,3)
-   end do
+
+do i=1,Natoms
+    write(*,130) (acc(i,j), j=1,3)
+enddo
 
 ! Create output files
 
 output_file='traj.xyz'
-open(13, file=output_file,status='replace')		!create trajectory's output file
-
+open(13, file=output_file,status='replace')			!create trajectories's output file
 close(13)
 
 energy_file='energies.out'
-open(14,file=energy_file, action='write', status='replace') !create energies's file output
-
+open(14,file=energy_file, action='write', status='replace') 	!create energies's output file
 write(14,*) 'Step    kineticE   potentialE   TotalE'
 close(14)
 
-write(*,*) 'Trajectory if found on: ',output_file
+write(*,*) 'Trajectory if found in: ',output_file
 write(*,*) 'Energies are found on: ',energy_file
 
+110 format(A,F12.6)
+130 format(3(2x,f12.6))
+
+end program md
