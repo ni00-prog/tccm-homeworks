@@ -36,6 +36,53 @@ do i=1,Natoms
    write(*,130) (dist(i,j), j=1,Natoms)
 enddo
 
+! Calculate potential 
+
+Vtot= V(epsilon,sigma,dist,Natoms)
+write(*,110) 'Potential Energy: ',Vtot
+
+! Calculate kinetic energy
+
+allocate(vel(Natoms,3))
+vel=0.d0
+Ktot= K(Natoms,vel,mass)
+write(*,110) 'Kinetic Energy: ', Ktot
+
+! Calculate total energy
+
+Etot= Ktot + Vtot   !direct calculation instead of function call
+write(*,110) 'Total Energy: ', Etot
+
+! Calculate acceleration
+
+allocate(acc(Natoms,3))
+call compute_acc(Natoms,coord,mass,dist,acc)
+write(*,*) 'Acceleration: '
+
+do i=1,Natoms
+    write(*,130) (acc(i,j), j=1,3)
+enddo
+
+! Create output files
+
+output_file='traj.xyz'
+open(13, file=output_file,status='replace') !create trajectories's output file
+close(13)
+
+energy_file='energies.out'
+open(14,file=energy_file, action='write', status='replace')     !create energies's output file
+write(14,*) 'Step    kineticE   potentialE   TotalE'
+close(14)
+
+write(*,*) 'Trajectory if found in: ',output_file
+write(*,*) 'Energies are found on: ',energy_file
+
+110 format(A,F12.6)
+130 format(3(2x,f12.6))
+
+
+
+endprogram md
 ! Obtain Natoms 
 integer function read_Natoms(input_file) result(Natoms)
 character(len=20),intent(in) :: input_file
@@ -77,49 +124,77 @@ do i=1,Natoms
 enddo
 
 end subroutine compute_distances
-
-! Calculate potential 
-
-Vtot= V(epsilon,sigma,dist,Natoms)
-write(*,110) 'Potential Energy: ',Vtot
+! Calculate potential energy
+real*8 function V(epsilon, sigma, dist, Natoms)
+    implicit none
+    integer, intent(in) :: Natoms
+    real*8, intent(in) :: epsilon, sigma, dist(Natoms,Natoms)
+    real*8 :: r
+    integer :: i, j
+    
+    V = 0.d0
+    do i = 1, Natoms
+        do j = i+1, Natoms
+            r = dist(i,j)
+            if (r <= 0.d0) then
+                V = 1.0d10
+            else
+                V = V + 4*epsilon*((sigma/r)**12 - (sigma/r)**6)  !Eq. 2
+            endif
+        enddo
+    enddo
+    return
+end function V
 
 ! Calculate kinetic energy
-
-allocate(vel(Natoms,3))
-vel=0.d0
-Ktot= K(Natoms,vel,mass)
-write(*,110) 'Kinetic Energy: ', Ktot
+real*8 function K(Natoms, vel, mass)
+    implicit none
+    integer, intent(in) :: Natoms
+    real*8, intent(in) :: vel(Natoms,3)
+    real*8, intent(in) :: mass(Natoms)
+    integer :: i, j
+    
+    K = 0.d0
+    do i = 1, Natoms
+        do j = 1, 3
+            K = K + 0.5d0*mass(i)*(vel(i,j)**2)  ! Eq. 3
+        enddo
+    enddo
+    return
+end function K
 
 ! Calculate total energy
-
-Etot= Ktot + Vtot				!direct calculation instead of function call
-write(*,110) 'Total Energy: ', Etot
+real*8 function E(Ktot, Vtot)
+    implicit none
+    real*8, intent(in) :: Ktot, Vtot
+    E = Ktot + Vtot  !Eq 4
+    return
+end function E
 
 ! Calculate acceleration
-
-allocate(acc(Natoms,3))
-call compute_acc(Natoms,coord,mass,dist,acc)
-write(*,*) 'Acceleration: '
-
-do i=1,Natoms
-    write(*,130) (acc(i,j), j=1,3)
-enddo
-
-! Create output files
-
-output_file='traj.xyz'
-open(13, file=output_file,status='replace')			!create trajectories's output file
-close(13)
-
-energy_file='energies.out'
-open(14,file=energy_file, action='write', status='replace') 	!create energies's output file
-write(14,*) 'Step    kineticE   potentialE   TotalE'
-close(14)
-
-write(*,*) 'Trajectory if found in: ',output_file
-write(*,*) 'Energies are found on: ',energy_file
-
-110 format(A,F12.6)
-130 format(3(2x,f12.6))
-
-end program md
+subroutine compute_acc(Natoms, coord, mass, dist, acc)
+    implicit none
+    integer, intent(in) :: Natoms
+    real*8, intent(in) :: coord(Natoms,3)
+    real*8, intent(in) :: mass(Natoms)
+    real*8, intent(in) :: dist(Natoms,Natoms)
+    real*8, intent(out) :: acc(Natoms,3)
+    real*8, parameter :: epsilon = 0.0661, sigma = 0.3345
+    real*8 :: r(3), rij, U
+    integer :: i, j, k
+    
+    acc = 0.d0
+    do i = 1, Natoms
+        do j = i+1, Natoms
+            r = coord(i,:) - coord(j,:)
+            rij = dist(i,j)
+            if (rij > 1.d-10) then
+                U = 24.d0 * epsilon / rij * ((sigma/rij)**6 - 2*(sigma/rij)**12)  !Eq. 6
+                do k = 1, 3
+                    acc(i,k) = acc(i,k) - (1.d0/mass(i))*U*r(k)/rij  !Eq 5 atom i
+                    acc(j,k) = acc(j,k) + (1.d0/mass(j))*U*r(k)/rij  !Opposite force for atom j
+                enddo
+            endif
+        enddo
+    enddo
+end subroutine compute_acc
