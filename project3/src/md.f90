@@ -1,6 +1,6 @@
 program md
 implicit none
-real*8,allocatable :: coord(:,:),mass(:),dist(:,:),vel(:,:),acc(:,:),dtcoord(:,:)
+real*8,allocatable :: coord(:,:),mass(:),dist(:,:),vel(:,:),acc(:,:),dtcoord(:,:),old_acc(:,:)
 real*8 :: r,V,Vtot,K,Ktot,E,Etot
 real*8,parameter :: epsilon=0.0661,sigma=0.3345,dt=0.2
 integer :: n,Natoms,read_Natoms,i,j 
@@ -27,7 +27,7 @@ write(*,*) 'Natoms: ', Natoms
 write(*,*) 'Nsteps: ', Nsteps
 write (*,*) 'Coordinates:'
 do i=1,Natoms
-      write(*,130) (coord(i,j), j=1,Natoms)
+      write(*,130) (coord(i,j), j=1,3)
 enddo
 write(*,*) 'Masses: '
 write(*,130) mass
@@ -77,12 +77,63 @@ close(14)
 write(*,*) 'Trajectory if found in: ',output_file
 write(*,*) 'Energies are found on: ',energy_file
 
+!Write initial configuration
+open(13, file=output_file,position='append')
+write(13,*) Natoms
+write(13,*) 'Initial configuration, E=',Etot
+do i=1,Natoms
+    write(13,*) 'Ar',(coord(i,j), j=1,3)
+enddo
+close(13)
+
+!Main MD propagation loop 
+
+allocate(old_acc(Natoms,3))
+old_acc = acc
+
+do n=1,Nsteps
+    old_acc = acc 						!store old acceleration
+
+!Update position Verlet algorithm eqz.6
+    dtcoord = vel*dt + 0.5d0*acc*(dt**2)
+    coord = coord + dtcoord					!compute new acceleration
+    
+    call compute_distances(Natoms,coord,dist)			!recompute distances with new positiond
+    call compute_acc(Natoms,coord,mass,dist,acc)		!compute new acceleration
+
+    !Update velocities with Verlet eqz.7
+    vel=vel+0.5d0*(old_acc + acc)*dt
+
+    !calculate and save energies every Nenergy steps
+    if (mod(n,Nenergy) == 0) then
+       Ktot = K(Natoms,vel,mass)
+       Vtot = V(epsilon,sigma,dist,Natoms)
+       Etot = Ktot + Vtot
+    
+       open(14,file=energy_file,position='append')
+       write(14,*) n,Ktot,Vtot,Etot,Etot-(Ktot+Vtot)
+       close(14)
+    endif
+
+    !save trajectory every Ntraj steps
+    if (mod(n,Ntraj) == 0) then
+        open(13,file=output_file,position='append')
+        write(13,*) Natoms
+        write(13,*) 'Step: ',n,' E= ',Etot
+        do i=1,Natoms
+            write(13,*) 'Ar',(coord(i,j), j=1,3)
+        enddo
+        close(13)
+    endif
+enddo
+
+deallocate(coord,mass,dist,vel,acc,old_acc,dtcoord)
+
 110 format(A,F12.6)
-130 format(3(2x,f12.6))
+130 format(3(2x,f12.6))    
 
+end program md
 
-
-endprogram md
 ! Obtain Natoms 
 integer function read_Natoms(input_file) result(Natoms)
 character(len=20),intent(in) :: input_file
@@ -198,3 +249,4 @@ subroutine compute_acc(Natoms, coord, mass, dist, acc)
         enddo
     enddo
 end subroutine compute_acc
+
