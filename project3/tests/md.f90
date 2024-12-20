@@ -4,7 +4,7 @@ real*8,allocatable :: coord(:,:),mass(:),dist(:,:),vel(:,:),acc(:,:),dtcoord(:,:
 real*8 :: r,V,Vtot,K,Ktot,E,Etot
 real*8,parameter :: epsilon=0.0661,sigma=0.3345,dt=0.2
 integer :: n,Natoms,read_Natoms,i,j 
-integer,parameter :: Nsteps=1000,Ntraj=50,Nenergy=5  ! Number of steps of MD ; Output traj/energy every x steps;
+integer,parameter :: Nsteps=10,Ntraj=1,Nenergy=1  ! Number of steps of MD ; Output traj/energy every x steps;
 character(len=30) :: input_file,output_file,energy_file
 
 ! Get number of atoms
