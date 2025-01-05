@@ -136,8 +136,8 @@ double calculate_mp2_correction(trexio_t* file){
             // orbital energies
             double denom = eps[i] + eps[j] - eps[a] - eps[b];
             // two electrons integrals
-            double ijab = find_integral(i, j, k, l, n_integrals, index, value);
-            double ijba = find_integral(i, j, l, k, n_integrals, index, value);
+            double ijab = find_integral(i, j, a, b, n_integrals, index, value);
+            double ijba = find_integral(i, j, b, a, n_integrals, index, value);
             // the energy following the equation
             mp2_energy += (ijab * (2.0*ijab -ijba)) / denom;
           }
