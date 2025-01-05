@@ -163,7 +163,7 @@ int main() {
     double hf_energy = calculate_hf_energy(file);
     printf("\nH2O Hartree-Fock Total Energy: %.7f atomic units\n", hf_energy);
 
-    double mp2_correction = calculate = calculate_mp2_correction(file);
+    double mp2_correction = calculate_mp2_correction(file);
     printf("MP2 Energy correction: %.7f atomic units\n", mp2_correction);
     printf("Total energy (HF + MP2): %.7f atomic units\n", hf_energy + mp2_correction);
   
