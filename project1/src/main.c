@@ -100,8 +100,7 @@ double calculate_hf_energy(trexio_t* file) {
     free(value);
     
     return energy;
-}
-
+  
 // MP2 CORRECTION
         double mo_energy;
         double mp2_energy;
