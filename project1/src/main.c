@@ -109,12 +109,12 @@ double calculate_mp2_correction(trexio_t* file){
   rc = trexio_read_mo_num(file, &mo_num);
   rc = trexio_read_electron_up_num(file, &n_up);
   // read the orbital energies
-  rc = trexio_read_mo_energy(file, &mo_energy);
   double *eps = malloc(mo_num * sizeof(double));
+  rc = trexio_read_mo_energy(file, eps);
   if (rc != TREXIO_SUCCESS) {
       fprintf(stderr, "The energies could not be read\n");
       free(eps);
-      return EXIT_FAILURE;
+      return 0.0;
     } //if reading fails.
 // read the two-electron integrals
   int64_t n_integrals;
