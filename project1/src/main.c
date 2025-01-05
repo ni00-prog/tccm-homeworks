@@ -100,55 +100,73 @@ double calculate_hf_energy(trexio_t* file) {
     free(value);
     
     return energy;
-  
-// MP2 CORRECTION
-        double mo_energy;
-        double mp2_energy;
-
-        rc = trexio_read_mo_energy(file, &mo_energy);
-        double *eps = malloc(mo_num * sizeof(double));
-    if (trexio_read_mo_energy(file, eps) != TREXIO_SUCCESS) {
-        fprintf(stderr, "The energies could not be read\n");
-        free(eps);
-        return EXIT_FAILURE;
+}  
+// MP2 CORRECTION FUNCTION
+double calculate_mp2_correction(trexio_t* file){
+  trexio_exit_code rc;
+  int32_t mo_num, n_up;
+  // read the number of electrons and number of orbitals
+  rc = trexio_read_mo_num(file, &mo_num);
+  rc = trexio_read_electron_up_num(file, &n_up);
+  // read the orbital energies
+  rc = trexio_read_mo_energy(file, &mo_energy);
+  double *eps = malloc(mo_num * sizeof(double));
+  if (rc != TREXIO_SUCCESS) {
+      fprintf(stderr, "The energies could not be read\n");
+      free(eps);
+      return EXIT_FAILURE;
     } //if reading fails.
+// read the two-electron integrals
+  int64_t n_integrals;
+  rc = trexio_read_mo_2e_int_eri_size(file, &n_integrals);
 
-// defining the counter for the n_occ and n_virtual
-        int n_occ = mo_num / (0.5 * n_electrons);
-        int n_virt = n_occ - mo_num;
+  int32_t* index = malloc(4 * n_integrals * sizeof(int32_t));
+  double* value = malloc(n_integrals * sizeof(double));
+  int64_t buffer_size = n_integrals;
+  rc = trexio_read_mo_2e_int_eri(file, 0, &buffer_size, index, value);
 
-// computing of the energy (using nested loops)
-        mp2_energy = 0.0;
-        for (int i = 0; i < mo_num; i++) {
-                for (int j = 0; j < n_occ; j++) {
-                // second bucle over the virtual orbitals (k, l)
-                        for (int k = n_occ; k < n_occ + n_virt; k++) {
-                                for (int l = n_occ; l < n_occ + n_virt; l++) {
-                        // orbital energies
-                                double denom = eps[i] + eps[j] - eps[k] - eps[l];
-                       // two electrons integrals
-                                double ijkl = find_integral(i, j, k, l, n_integrals, index, value);
-                                double ijlk = find_integral(i, j, l, k, n_integrals, index, value);
-                        // the energy following the equation
-                        mp2_energy += (ijkl * (2*ijkl -ijlk)) / denom;
-                                }
-                        }
-                }
+// computing of the mp2 energy (using nested loops)
+  double mp2_energy = 0.0;
+  // first bucle over the occupied orbitals
+  for(int i = 0; i < n_up; i++) {
+    for(int j = 0; j < n_up; j++) {
+      // second bucle over the virtual orbitals (k, l)
+      for(int a = n_up; a < mo_num; a++) {
+        for (int b = n_up; b < mo_num; b++) {
+            // orbital energies
+            double denom = eps[i] + eps[j] - eps[a] - eps[b];
+            // two electrons integrals
+            double ijab = find_integral(i, j, k, l, n_integrals, index, value);
+            double ijba = find_integral(i, j, l, k, n_integrals, index, value);
+            // the energy following the equation
+            mp2_energy += (ijab * (2.0*ijab -ijba)) / denom;
+          }
         }
-        printf("MP2 Energy: %.7f\n", mp2_energy);
+      }
+    }
+    free(eps);
+    free(index);
+    free(value);
+
+  return mp2_energy;
 }
 
 int main() {
+  // open the file
     trexio_exit_code rc;
     trexio_t* file = trexio_open("../data/h2o.h5", 'r', TREXIO_AUTO, &rc);
     if (rc != TREXIO_SUCCESS) {
         fprintf(stderr, "Could not open h2o.h5\n");
         return 1;
     }
-    
+    // Calling the functions and printing the results. 
     double hf_energy = calculate_hf_energy(file);
     printf("\nH2O Hartree-Fock Total Energy: %.7f atomic units\n", hf_energy);
-    
+
+    double mp2_correction = calculate = calculate_mp2_correction(file);
+    printf("MP2 Energy correction: %.7f atomic units\n", mp2_correction);
+    printf("Total energy (HF + MP2): %.7f atomic units\n", hf_energy + mp2_correction);
+  
     trexio_close(file);
     return 0;
 }
