@@ -33,4 +33,4 @@ Which are used for both methods.
 
 Structure of the directory
 ---------------------------
-The main directory "Project 1" is part of the repository tccm-homeworks. Inside, as you could see, there are two subfolders: data and src. In the first one , *data*, you will find 6 files with the names of different molecules that can be used to test the code, these files have the extension ".h5" which belongs to TREXIO library. The following subfolder *src* contains the source code. Of the project. 
+The main directory "Project 1" is part of the repository tccm-homeworks. Inside, as you could see, there are two subfolders: data and src. In the first one , *data*, you will find 6 files with the names of different molecules that can be used to test the code, these files have the extension ".h5" which belongs to TREXIO library. The following subfolder *src* contains the source code of the project. 
