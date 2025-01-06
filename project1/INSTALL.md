@@ -54,4 +54,12 @@ This will generate the program `hf_mp2_calculation`. To run it use the following
 ./hf_mp2_calculation
 ```
 
-The default calculation that the code will run is for water, to change the molecule modify the line ??? in the code. 
+The default calculation that the code will run is for water, to change the molecule modify the line 157 in the code `trexio_t* file = trexio_open("../data/h2o.h5", 'r', TREXIO_AUTO, &rc);`. In the following portion `"../data/h2o.h5"` instead of writing `h2o.h5` you can write:
+
+- c2h2.h5
+- ch4.h5
+- co2.h5
+- h3coh.h5
+- hcn.h5
+
+
