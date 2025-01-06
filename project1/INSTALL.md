@@ -7,8 +7,10 @@ How to start using the code
 The first step is to clone the directory in your computer, use the following command to do it:
 
 ```
-jjdjdjdjdj
+git clone https://github.com/ni00-prog/tccm-homeworks.git
 ```
+
+this will copy the repository `tccm-homework` in you computer. Go to the directory `project1`.
 
 As the code is written in C, a C compiler is necessary (we recommend to use GCC because it was used to compile the code).
 
@@ -38,7 +40,7 @@ sudo make install
 
 This will install the library in `/usr/local/lib`.
 
-## Compiling
+## Compiling and running the code
 
 The following command will link TREXIO in the compilation of the program:
 
@@ -52,4 +54,4 @@ This will generate the program `hf_mp2_calculation`. To run it use the following
 ./hf_mp2_calculation
 ```
 
-By
+The default calculation that the code will run is for water, to change the molecule modify the line ??? in the code. 
