@@ -26,7 +26,7 @@ double find_integral(int i, int j, int k, int l, int64_t n_integrals,
     }
     return 0.0; 
 }
-
+//Hartree-Fock energy calculation
 double calculate_hf_energy(trexio_t* file) {
     trexio_exit_code rc;
     double nuclear_repulsion;
@@ -101,7 +101,7 @@ double calculate_hf_energy(trexio_t* file) {
     
     return energy;
 }  
-// MP2 CORRECTION FUNCTION
+//second order Moller-Plesset perturbation correction
 double calculate_mp2_correction(trexio_t* file){
   trexio_exit_code rc;
   int32_t mo_num, n_up;
@@ -150,7 +150,7 @@ double calculate_mp2_correction(trexio_t* file){
 
   return mp2_energy;
 }
-
+//calculate both HF and MP2 energies for H2O molecule
 int main() {
   // open the file
     trexio_exit_code rc;
