@@ -1,3 +1,4 @@
+!MOLECULAR DYNAMICS SIMULATION OF ARGON ATOMS USING LENNARD-JONES POTENTIAL
 program md
 implicit none
 real*8,allocatable :: coord(:,:),mass(:),dist(:,:),vel(:,:),acc(:,:),dtcoord(:,:),old_acc(:,:)
