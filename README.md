@@ -12,5 +12,5 @@ and `git push` to your fork.
 When you are done (or when the time limit is reached), you will make a pull-request
 of your fork to our GitHub repository.
 
-
+If you need help with the creation of your GitHub token, read the inscructions given in the [token.pdf](token.pdf) file
 
